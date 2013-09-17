@@ -6,7 +6,9 @@
   "version": "1.0",
 
   "permissions": [
-    "tabs", "http://www.youtube.com/watch*"
+    "tabs", 
+    "http://www.youtube.com/*",
+    "storage"
   ],
   "browser_action": {
     "default_icon": "icon.png",
@@ -15,8 +17,12 @@
   "content_scripts": [
     {
       "matches": ["http://www.youtube.com/watch*"],
-      "js": ["jquery-2.0.3.min.js", "flow.js"],
-      "run_at": "document_end"
+      "js": ["flow.js"],
+      "run_at": "document_idle"
     }
-  ]
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "web_accessible_resources": ["jquery-2.0.3.min.js", "inject.js", "inject2.js"]
 }
