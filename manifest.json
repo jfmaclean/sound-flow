@@ -1,4 +1,4 @@
-{
+ {
   "manifest_version": 2,
 
   "name": "Sound Flow",
@@ -8,6 +8,7 @@
   "permissions": [
     "tabs", 
     "http://www.youtube.com/*",
+    "http://www.pandora.com/*",
     "storage"
   ],
   "browser_action": {
@@ -17,12 +18,18 @@
   "content_scripts": [
     {
       "matches": ["http://www.youtube.com/watch*"],
-      "js": ["flow.js"],
+      "js": ["youtube/youtube_content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://www.pandora.com/*"],
+      "js": ["pandora/pandora_content.js"],
       "run_at": "document_idle"
     }
   ],
   "background": {
-    "scripts": ["background.js"]
+    "page": "background.html"
+
   },
-  "web_accessible_resources": ["jquery-2.0.3.min.js", "inject.js", "inject2.js"]
+  "web_accessible_resources": ["pandora/pandora_inject.js", "youtube/youtube_inject.js"]
 }

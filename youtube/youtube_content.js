@@ -4,11 +4,13 @@ var container;
 var state = -1;
 var DEBUG = true;
 
+var PLAYING = 1;
+var PAUSED = 0;
 
 var inject = function() {
     injected = true;
     var s = document.createElement('script');
-    s.src = chrome.extension.getURL("inject.js");
+    s.src = chrome.extension.getURL("youtube/youtube_inject.js");
     s.onload = function() {
         this.parentNode.removeChild(this);
     };
@@ -48,21 +50,22 @@ var sendMessageToBackground = function (message, responseHandler) {
     chrome.runtime.sendMessage(message, responseHandler);
 };
 
-chrome.runtime.onMessage.addListener(
-  function(message, sender, sendResponse) {
-    console.log("Content received message" + sender.tab ?
-                "from a content script:" + sender.tab.url :
-                "from the extension" + message);
-  });
-
-
-// receive messages
+// receive messages from background
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     console.log("content script received message ", message, " from sender ", sender);
-    if (message.hasOwnProperty("updatePlayer")) {
-        sendMessageToPage("UPDATE_PLAYER", message.updatePlayer);
+    if (message.message === "updatePlayer") {
+        sendMessageToPage("UPDATE_PLAYER", {setState: message.desiredState});
     }
 });
+
+// chrome.runtime.onMessage.addListener(
+//   function(message, sender, sendResponse) {
+//     console.log("Content received message" + sender.tab ?
+//                 "from a content script:" + sender.tab.url :
+//                 "from the extension" + message);
+//   });
+
+
 var injected = false;
 // on load
 var readyStateCheckInterval = setInterval(function() {
@@ -73,6 +76,7 @@ var readyStateCheckInterval = setInterval(function() {
     receiveMessageFromPage("YT_READY", onLoad);
     receiveMessageFromPage("STATE_CHANGE", stateChange);
     receiveMessageFromPage("UPDATE_RESPONSE", updateResponse);
+
     clearInterval(readyStateCheckInterval);
   }
 }, 10);
@@ -81,6 +85,7 @@ var readyStateCheckInterval = setInterval(function() {
 var stateChange = function (event) {
     console.log("Content got state change to", event.detail.state);
     state = event.detail.state;
+    sendMessageToBackground({message: "update", state: state, sender: 'content'}, function(r){console.log("response handler in background");});
 };
 
 var updateResponse = function (event) {
@@ -88,18 +93,9 @@ var updateResponse = function (event) {
 };
 
 var onLoad = function (event) {
-    
-    // if (DEBUG) console.log("Content");
 
-    setInterval(function(){
-        if (state === 1) sendMessageToPage("UPDATE_PLAYER", {setState: 2});
-        else if (state === 2) sendMessageToPage("UPDATE_PLAYER", {setState: 1});
-    }, 5000);
+    sendMessageToBackground({message: "register", state: 1},function() {console.log("handler");});
 
-    // player.addEventListener("onYouTubePlayerReady", (player.id)
-    // sendMessageToBackground({message: "register", status: getStatus()}, function(response) {
-    //     console.log("Background responded to registration event!");
-    // });
 };
 
 
