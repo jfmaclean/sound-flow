@@ -3,7 +3,7 @@
 
   "name": "Sound Flow",
   "description": "Enables seamless audio experiences across tabs",
-  "version": "1.0",
+  "version": "0.3",
 
   "permissions": [
     "tabs", 
@@ -28,7 +28,7 @@
     }
   ],
   "background": {
-    "page": "background.html"
+    "js": "background.js"
 
   },
   "web_accessible_resources": ["pandora/pandora_inject.js", "youtube/youtube_inject.js"]

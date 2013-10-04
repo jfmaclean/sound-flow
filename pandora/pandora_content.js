@@ -40,21 +40,13 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
 });
 
-// chrome.runtime.onMessage.addListener(
-//   function(message, sender, sendResponse) {
-//     console.log("Content received message" + sender.tab ?
-//                 "from a content script:" + sender.tab.url :
-//                 "from the extension" + message);
-//   });
-
-
 var injected = false;
 // on load
 var readyStateCheckInterval = setInterval(function() {
   if (document.readyState === "complete") {
     if (!injected) inject();
     container = document.getElementById("playbackControl");
-    // // player = document.getElementById("movie_player");
+
     receiveMessageFromPage("READY", onLoad);
     receiveMessageFromPage("STATE_CHANGE", stateChange);
     receiveMessageFromPage("UPDATE_RESPONSE", updateResponse);
@@ -94,9 +86,6 @@ var updateResponse = function (event) {
 };
 
 var onLoad = function (event) {
-    // play = document.getElementsByClassName("playButton")[0];
-    // pause = document.getElementsByClassName("pauseButton")[0];
-    // setInterval(function() {toggle();}, 4000);
     console.log("onload");
     sendMessageToBackground({message: "register", state: PLAYING},function() {
         console.log("handler");});

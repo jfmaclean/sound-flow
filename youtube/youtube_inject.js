@@ -11,7 +11,10 @@ var PAUSED = 0;
   before.parentNode.insertBefore(s, before);
 })();
 
-// Messaging functions
+//////////////////////////////////////////////
+////////////// Message Passing ///////////////
+//////////////////////////////////////////////
+
 var sendMessageToContent = function (name, data) {
     data.sender = "INJECTED_PAGE";
     var event = new CustomEvent(name, {detail: data, bubbles: false, cancelable : false});
@@ -26,7 +29,10 @@ var listenFromContent = function (name, handler) {
     }, false);
 };
 
-//// Individual event handlers
+//////////////////////////////////////////////
+////////////// Event Handlers ////////////////
+//////////////////////////////////////////////
+
 // Listening to player
 var onStateChange = function (event) {
     sendMessageToContent("STATE_CHANGE", {sender: "PAGE", state: event});
@@ -48,18 +54,9 @@ var updatePlayer = function(event) {
         } else err = "Can't parse setMute=" + request.setMute;
     } else if (request.hasOwnProperty("setState")) {
         if (request.setState === PLAYING) { // play
-            // console.log(player.removeEventListener);
-            // player.removeEventListener("onStateChange", onStateChange, false);
-            // console.log("before play: ", player.getPlayerState());
             player.playVideo();
-            // console.log("after play: ", player.getPlayerState());
-            // player.addEventListener('onStateChange', onStateChange);
         } else if (request.setState === PAUSED) { //pause
-            // player.removeEventListener("onStateChange", onStateChange, false);
-            // console.log("before pause: ", player.getPlayerState());
             player.pauseVideo();
-            // console.log("after pause: ", player.getPlayerState());
-            // player.addEventListener('onStateChange', onStateChange);
         } else err = "Can't parse setState=" + request.setState;
     }
     else {

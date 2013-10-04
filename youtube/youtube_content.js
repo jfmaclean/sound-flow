@@ -1,4 +1,3 @@
-
 var player;
 var container;
 var state = -1;
@@ -6,6 +5,8 @@ var DEBUG = true;
 
 var PLAYING = 1;
 var PAUSED = 0;
+
+var injected = false;
 
 var inject = function() {
     injected = true;
@@ -17,21 +18,9 @@ var inject = function() {
     (document.head||document.documentElement).appendChild(s);
 };
 
-// var getState = function () {
-//     var state = sendMessageToPage("REQUEST_INFO", ["state"]);
-//     if (state === 2) {
-//         return "paused";
-//     } else if (state === 1) {
-//         return "playing";
-//     } else if (state === -1) {
-//         return "unstarted";
-//     } else if (state === 3) {
-//         return  "buffering";
-//     } else if (state === 5) {
-//         return "video_cued";
-//     } return "unknown (" + state + ")";
-// };
-
+//////////////////////////////////////////////
+////////////// Message Passing ///////////////
+//////////////////////////////////////////////
 
 var receiveMessageFromPage = function (name, handler) {
     container.addEventListener(name, function(event){
@@ -58,29 +47,9 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
 });
 
-// chrome.runtime.onMessage.addListener(
-//   function(message, sender, sendResponse) {
-//     console.log("Content received message" + sender.tab ?
-//                 "from a content script:" + sender.tab.url :
-//                 "from the extension" + message);
-//   });
-
-
-var injected = false;
-// on load
-var readyStateCheckInterval = setInterval(function() {
-  if (document.readyState === "complete") {
-    if (!injected) inject();
-    container = document.getElementById("player-api");
-    // player = document.getElementById("movie_player");
-    receiveMessageFromPage("YT_READY", onLoad);
-    receiveMessageFromPage("STATE_CHANGE", stateChange);
-    receiveMessageFromPage("UPDATE_RESPONSE", updateResponse);
-
-    clearInterval(readyStateCheckInterval);
-  }
-}, 10);
-
+//////////////////////////////////////////////
+////////////// Event Handlers ////////////////
+//////////////////////////////////////////////
 
 var stateChange = function (event) {
     console.log("Content got state change to", event.detail.state);
@@ -93,10 +62,20 @@ var updateResponse = function (event) {
 };
 
 var onLoad = function (event) {
-
     sendMessageToBackground({message: "register", state: 1},function() {console.log("handler");});
-
 };
 
 
-	
+// on load
+var readyStateCheckInterval = setInterval(function() {
+  if (document.readyState === "complete") {
+    if (!injected) inject();
+    container = document.getElementById("player-api");
+
+    receiveMessageFromPage("YT_READY", onLoad);
+    receiveMessageFromPage("STATE_CHANGE", stateChange);
+    receiveMessageFromPage("UPDATE_RESPONSE", updateResponse);
+
+    clearInterval(readyStateCheckInterval);
+  }
+}, 10);

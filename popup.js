@@ -1,4 +1,8 @@
+//////////////////////////////////////////////
+////////////// Drag And Drop /////////////////
+//////////////////////////////////////////////
 
+// We use HTML5 native D&D, currently testing out functionality
 
 function handleDrop(e) {
   // this / e.target is current target element.
@@ -8,38 +12,29 @@ function handleDrop(e) {
   }
   alert("dropped ");
   console.log("dropped ", e);
-  // See the section on the DataTransfer object.
-
   return false;
 }
 
 function handleDragStart(e) {
-  this.style.opacity = '0.4';  // this / e.target is the source node.
+  // this / e.target is the source node.
+  this.style.opacity = '0.4';
   alert("dragStart");
 }
 
 
 function handleDragEnd(e) {
   // this/e.target is the source node.
-
-
 }
 
 var players = $(".player");
 [].forEach.call(players, function(player) {
   player.addEventListener('dragstart', handleDragStart, false);
   player.addEventListener('drop', handleDrop, false);
-  // col.addEventListener('dragend', handleDragEnd, false);
 });
 
-
-
-
-
-
-
-
-
+//////////////////////////////////////////////
+////////////// Message Passing ///////////////
+//////////////////////////////////////////////
 
 // var sendMessageToBackground = function (message, responseHandler) {
 //     chrome.runtime.sendMessage(message, responseHandler);
