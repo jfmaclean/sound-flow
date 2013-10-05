@@ -1,0 +1,23 @@
+/*
+      html, body {
+        width: 300px;
+        height: 300px;
+        margin: 0px;
+      }*/
+body {
+  width: 300px;
+  height: 300px;
+  background-color: rgb(101, 176, 196);
+  background-image: none;
+}
+
+.player {
+  width: 90%;
+  height: 20px;
+}
+
+.player .thumbnail {
+  width: 16px;
+  height: 16px;
+  
+}
