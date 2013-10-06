@@ -43,28 +43,50 @@ var onStateChange = function (e) {
 
 // Receiving from content script
 var updatePlayer = function(event) {
-    var request = event.detail;
-    var err;
-    if (request.hasOwnProperty("setVolume")) {
-        if (request.setVolume < 0 || request.setVolume > 100) {
-            player.setVolume(request.setVolume);
-        } else err = "Can't parse setVolume=" + request.setVolume;
-    } else if (request.hasOwnProperty("setMute")) {
-        if (request.setMute === 0) { //unmute
-            player.unMute();
-        } else if (request.setMute === 1) { //mute
+    var requestState = event.detail.setState;
+    var err = "";
+    if (requestState.volume !== state.volume) {
+        player.setVolume(requestState.volume * 100);
+    }
+    if (requestState.muted !== state.muted) {
+        if (requestState.muted) {
             player.mute();
-        } else err = "Can't parse setMute=" + request.setMute;
-    } else if (request.hasOwnProperty("setState")) {
-        if (request.setState === PLAYING) { // play
+        } else {
+            player.unMute();
+        }
+    }
+    if (requestState.playing !== state.playing) {
+        if (requestState.playing) {
             player.playVideo();
-        } else if (request.setState === PAUSED) { //pause
+        } else {
             player.pauseVideo();
-        } else err = "Can't parse setState=" + request.setState;
+        }
     }
-    else {
-        err = "Can't parse request";
+    if (requestState.title !== state.title) {
+        err += "diff title";
     }
+
+
+    // if (request.hasOwnProperty("setVolume")) {
+    //     if (request.setVolume < 0 || request.setVolume > 100) {
+    //         player.setVolume(request.setVolume);
+    //     } else err = "Can't parse setVolume=" + request.setVolume;
+    // } else if (request.hasOwnProperty("setMute")) {
+    //     if (request.setMute === 0) { //unmute
+    //         player.unMute();
+    //     } else if (request.setMute === 1) { //mute
+    //         player.mute();
+    //     } else err = "Can't parse setMute=" + request.setMute;
+    // } else if (request.hasOwnProperty("setState")) {
+    //     if (request.setState === PLAYING) { // play
+    //         player.playVideo();
+    //     } else if (request.setState === PAUSED) { //pause
+    //         player.pauseVideo();
+    //     } else err = "Can't parse setState=" + request.setState;
+    // }
+    // else {
+    //     err = "Can't parse request";
+    // }
     sendMessageToContent("UPDATE_RESPONSE", {err: err});
 };
 

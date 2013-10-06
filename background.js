@@ -54,10 +54,12 @@ var onTabClosed = function (tabId, removeInfo) {
                     if (data.past.hasOwnProperty(pastTabId)) {
                         pastTabId = data.past[pastTabId];
                     } else { // If we can't find a tab to go back to
+                        console.log("couldn't find a way back");
                         return;
                     }
                 }
-                sendUpdate(pastTabId, PLAYING);
+                data.tabs[pastTabId].state.playing = true;
+                sendUpdate(pastTabId, data.tabs[pastTabId].state);
                 data.curr = pastTabId;
             } else {
                 // TODO
@@ -111,6 +113,8 @@ chrome.runtime.onMessage.addListener(
         updateFromPage(sender.tab, request.state);
     } else if (request.type === "registerPopup") {
         sendMessageToPopup({type: "popupInit", data: data});
+    } else if (request.type === "popupClick" && request.state) {
+        sendUpdate(request.tabId, request.state);
     }
   });
 

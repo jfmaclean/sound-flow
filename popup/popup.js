@@ -6,6 +6,7 @@ var PLAYING = 1;
 var PAUSED = 0;
 
 var data;
+var newData;
 
 //////////////////////////////////////////////
 ////////////////// Draw //////////////////////
@@ -23,51 +24,35 @@ var draw = function () {
       playing = data.tabs[i].state.playing;
       title = "<p class='title'>" + (data.tabs[i].state.title ? data.tabs[i].state.title : data.tabs[i].tab.title) + "</p>";
       state_button = "<img class='state_button' src=" + (playing ? "'../images/pause_button.png'" : "'../images/play_button.png'") + ">";
-      volume_button = "<img class='volume_button' src=" + (muted ? "'../images/volume_button.png'" : "'../images/mute_button.png'") + ">";
-      player = "<li class='player'>" + icon + title + state_button + volume_button + "</li>";
-      console.log(i);
+      volume_button = "<img class='volume_button' src=" + (muted ?  "'../images/mute_button.png'" : "'../images/volume_button.png'") + ">";
+      player = "<li class='player' data-tab-id=" + i +">" + icon + title + state_button + volume_button + "</li>";
+      // console.log(i);
       if (playing) {
         play_list.append(player);
       } else {
         pause_list.append(player);
       }
     }
+    // play_list.each(function(i, e) {
+    //   var tab = e[data-tabId];
+    //   e.
+    // }
+    $(".state_button").click(function (c) {
+        var parent = $(this).parent('li');
+        var tabId = parent.data("tab-id");
+        var state = data.tabs[tabId].state;
+        state.playing = !state.playing;
+        sendMessageToBackground({type: "popupClick", tabId: tabId, state: state});
+      });
+    $(".volume_button").click(function (c) {
+        var parent = $(this).parent('li');
+        var tabId = parent.data("tab-id");
+        var state = data.tabs[tabId].state;
+        state.muted = !state.muted;
+        sendMessageToBackground({type: "popupClick", tabId: tabId, state: state});
+      });
   }
 };
-
-//////////////////////////////////////////////
-////////////// Drag And Drop /////////////////
-//////////////////////////////////////////////
-
-// We use HTML5 native D&D, currently testing out functionality
-
-function handleDrop(e) {
-  // this / e.target is current target element.
-
-  if (e.stopPropagation) {
-    e.stopPropagation(); // stops the browser from redirecting.
-  }
-  alert("dropped ");
-  console.log("dropped ", e);
-  return false;
-}
-
-function handleDragStart(e) {
-  // this / e.target is the source node.
-  this.style.opacity = '0.4';
-  alert("dragStart");
-}
-
-
-function handleDragEnd(e) {
-  // this/e.target is the source node.
-}
-
-var players = $(".player");
-[].forEach.call(players, function(player) {
-  player.addEventListener('dragstart', handleDragStart, false);
-  player.addEventListener('drop', handleDrop, false);
-});
 
 //////////////////////////////////////////////
 ////////////// Message Passing ///////////////
