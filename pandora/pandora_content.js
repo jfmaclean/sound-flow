@@ -1,5 +1,5 @@
 
-var play, pause;
+var play, pause, container;
 var DEBUG = true;
 
 var PLAYING = 1;
@@ -55,30 +55,30 @@ var readyStateCheckInterval = setInterval(function() {
   }
 }, 10);
 
-var getState = function () {
-    play = document.getElementsByClassName("playButton")[0];
-    pause = document.getElementsByClassName("pauseButton")[0];
-    console.log("getState");
-    if (play.display === "none") {
-        return PAUSED;
-    } else {
-        return PLAYING;
-    }
-};
+// var getState = function () {
+//     play = document.getElementsByClassName("playButton")[0];
+//     pause = document.getElementsByClassName("pauseButton")[0];
+//     console.log("getState");
+//     if (play.display === "none") {
+//         return PAUSED;
+//     } else {
+//         return PLAYING;
+//     }
+// };
 
-var toggle = function () {
-    console.log("toggle, play/pause", play, pause);
-    if (getState() === PAUSED) {
-        play.click();
-    } else {
-        pause.click();
-    }
-};
+// var toggle = function () {
+//     console.log("toggle, play/pause", play, pause);
+//     if (getState() === PAUSED) {
+//         play.click();
+//     } else {
+//         pause.click();
+//     }
+// };
 
 var stateChange = function (event) {
     console.log("Content got state change to", event.detail.state);
     state = event.detail.state;
-    sendMessageToBackground({type: "click", state: state, sender: 'content'}, function(r){console.log("response handler in background");});
+    sendMessageToBackground({type: "update", state: state, sender: 'content'}, function(r){console.log("response handler in background");});
 };
 
 var updateResponse = function (event) {
@@ -87,7 +87,7 @@ var updateResponse = function (event) {
 
 var onLoad = function (event) {
     console.log("onload");
-    sendMessageToBackground({type: "register", state: PLAYING},function() {
-        console.log("handler");});
+    // sendMessageToBackground({type: "register", state: {},function() {
+    //     console.log("handler");});
 
 };

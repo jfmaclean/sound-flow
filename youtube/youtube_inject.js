@@ -5,6 +5,7 @@ var DEBUG = 1;
 var state = {playing: false, volume: 1, muted: false, title: ""};
 var PLAYING = 1;
 var PAUSED = 0;
+var forceUpdate = false;
 
 (function() { // Closure, to not leak to the scope
   var s = document.createElement("script");
@@ -66,48 +67,25 @@ var updatePlayer = function(event) {
         err += "diff title";
     }
 
-
-    // if (request.hasOwnProperty("setVolume")) {
-    //     if (request.setVolume < 0 || request.setVolume > 100) {
-    //         player.setVolume(request.setVolume);
-    //     } else err = "Can't parse setVolume=" + request.setVolume;
-    // } else if (request.hasOwnProperty("setMute")) {
-    //     if (request.setMute === 0) { //unmute
-    //         player.unMute();
-    //     } else if (request.setMute === 1) { //mute
-    //         player.mute();
-    //     } else err = "Can't parse setMute=" + request.setMute;
-    // } else if (request.hasOwnProperty("setState")) {
-    //     if (request.setState === PLAYING) { // play
-    //         player.playVideo();
-    //     } else if (request.setState === PAUSED) { //pause
-    //         player.pauseVideo();
-    //     } else err = "Can't parse setState=" + request.setState;
-    // }
-    // else {
-    //     err = "Can't parse request";
-    // }
-    sendMessageToContent("UPDATE_RESPONSE", {err: err});
+    // sendMessageToContent("STATE_CHANGE", {state:state});
+    setTimeout(function() {
+        forceUpdateFunc();
+    }, 1000);
 };
 
 var requestInfo = function (event) {
     updateState();
-    // for (var request in event.detail.requests) {
-    //     switch (request) {
-    //         case "state":
-    //             response.state = player.getPlayerState();
-    //             break;
-    //         case "volume":
-    //             response.volume = player.getVolume();
-    //             break;
-    //         case "isMuted":
-    //             response.isMuted = player.isMuted();
-    //             break;
-    //         default:
-    //             console.log("Unknown request for injected script", request);
-    //     }
-    // }
     sendMessageToContent("INFO_RESPONSE", {state: state});
+};
+
+var forceUpdateFunc = function() {
+    var tempState = {};
+    tempState.playing = (player.getPlayerState() == PLAYING);
+    tempState.muted = player.isMuted();
+    tempState.volume = player.getVolume()/100.0;
+    tempState.title = document.getElementsByClassName("watch-title")[0].title;
+    state = tempState;
+    sendMessageToContent("STATE_CHANGE", {state: state});
 };
 
 var updateState = function() {
