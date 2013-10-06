@@ -1,6 +1,7 @@
 var player;
 var container;
 var state = -1;
+
 var DEBUG = true;
 
 var PLAYING = 1;
@@ -42,7 +43,7 @@ var sendMessageToBackground = function (message, responseHandler) {
 // receive messages from background
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     console.log("content script received message ", message, " from sender ", sender);
-    if (message.message === "updatePlayer") {
+    if (message.type === "updatePlayer") {
         sendMessageToPage("UPDATE_PLAYER", {setState: message.desiredState});
     }
 });
@@ -54,7 +55,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 var stateChange = function (event) {
     console.log("Content got state change to", event.detail.state);
     state = event.detail.state;
-    sendMessageToBackground({message: "update", state: state, sender: 'content'}, function(r){console.log("response handler in background");});
+    sendMessageToBackground({type: "update", state: state, sender: 'content'}, function(r){console.log("response handler in background");});
 };
 
 var updateResponse = function (event) {
@@ -62,7 +63,7 @@ var updateResponse = function (event) {
 };
 
 var onLoad = function (event) {
-    sendMessageToBackground({message: "register", state: 1},function() {console.log("handler");});
+    sendMessageToBackground({type: "register", state: 1},function() {console.log("handler");});
 };
 
 
