@@ -28,7 +28,7 @@
     }
   ],
   "background": {
-      "page":"background.html"
+      "page":"background/background.html"
 
   },
   "web_accessible_resources": ["pandora/pandora_inject.js", "youtube/youtube_inject.js"]

@@ -1,7 +1,7 @@
 // tabs: {tab.id => {tab: tab,state: state}, ...}
 // playing: [tabid, ...]
 // past: {currTabId => [PrevTabId, ...], ...}
-// starred: [tabId, ...]
+// pinned: [tabId, ...]
 
 var PLAYING = 1;
 var PAUSED = 0;
@@ -17,19 +17,12 @@ var requests = [];
 var onTabClosed = function (tabId, removeInfo) {
     var tabsToPlay;
     if (_.has(data.tabs, tabId)) {
-        data.starred = _.without(data.starred, tabId);
+        data.pinned = _.without(data.pinned, tabId);
         data.tabs = _.omit(data.tabs, tabId);
         data.requests = _.without(data.requests, tabId);
         
         sendMessageToPopup("popupUpdate", data);
         if (_.contains(data.playing, tabId)) {
-            // find tabs to go back to
-            // tabsToPlay = findPastTabsToPlay(tabId);
-            // _.each(tabsToPlay, function(pastTabId, i, list) {
-            //     var tempState = data.tabs[pastTabId].state;
-            //     tempState.playing = true;
-            //     requestUpdate(pastTabId, tempState);
-            // });
             restorePrevTabs(tabId);
             data.playing = _.without(data.playing, tabId);
         } else {
@@ -40,54 +33,21 @@ var onTabClosed = function (tabId, removeInfo) {
 
 var updateFromPage = function (tab, state, replace) {
     var tabId = tab.id;
-    var currPlaying = _.contains(data.playing, tabId);
+    console.log(data, tabId, state, replace);
+    var isPlaying = _.contains(data.playing, tabId);
+    // If this is a new tab
     if (!_.has(data.tabs, tabId)) {
         data.tabs[tabId] = {tab: tab, state: state};
     }
-
     // If this is switching to playing
-    if (state.playing && !currPlaying) {
+    if (state.playing && !isPlaying) {
         moveTabToTop(tabId);
     } // or is this switching to paused
-    else if (!state.playing && currPlaying) {
+    else if (!state.playing && isPlaying) {
         restorePrevTabs(tabId);
     }
-
+    sendMessageToPopup("popupUpdate", data);
 };
-
-// var stateUpdate = function (tabId, state, replace) {
-//     if (tabId) {
-//         if (state.playing && tabId !== data.playing && replace) {
-//             if (data.playing) {
-//                 if (requests[tabId]) {
-//                     requests[tabId] = false;
-//                     data.tabs[tabId].state = state;
-//                     sendMessageToPopup({type: "popupUpdate", data: data});
-//                     return;
-//                 }
-//                 data.past[tabId] = data.playing;
-//                 data.tabs[data.playing].state.playing = false;
-//                 sendUpdate(data.playing, data.tabs[data.playing].state);
-//             }
-//             data.playing = tabId;
-//         }
-//         data.tabs[tabId].state = state;
-//         sendMessageToPopup({type: "popupUpdate", data: data});
-//     }
-
-// };
-
-// var updateFromPage = function (tab, state) {
-//     console.log(data, tab, state);
-//     if (!data.tabs.hasOwnProperty(tab.id)) {
-//         data.tabs[tab.id] = {tab: tab, state: state};
-//         requests[tab.id] = false;
-//     }
-
-//     stateUpdate(tab.id, state, true);
-
-
-// };
 
 //////////////////////////////////////////////
 //////////// Message Passing /////////////////
@@ -96,7 +56,7 @@ var updateFromPage = function (tab, state, replace) {
 // Listen from pages
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    // console.log("Request ", request, "from ", sender);
+    console.log("Request ", request, "from ", sender);
     if (request.type === "update" && request.state) {
         updateFromPage(sender.tab, request.state);
     } else if (request.type === "registerPopup") {
@@ -105,7 +65,7 @@ chrome.runtime.onMessage.addListener(
         requests[request.tabId] = true;
         sendUpdate(request.tabId, request.state);
     } else if (request.type === "popupStar" ) {
-        data.starred = request.tabId;
+        data.pinned = request.tabId;
         sendMessageToPopup("popupUpdate", data);
     }
   });
@@ -127,6 +87,20 @@ var sendMessageToPopup = function(type, data) {
 //////////////////////////////////////////////
 //////////// Helper Functions ////////////////
 //////////////////////////////////////////////
+
+var moveTabToTop = function(tabId) {
+    if (_.contains(data.playing, tabId)) {
+        return;
+    }
+    var currPlaying = _.filter(data.playing, function(tab) {
+        return _.contains(data.pinned, tab);
+    });
+    data.past[tabId] = currPlaying;
+    data.playing = _.difference(data.playing, currPlaying);
+    data.playing.push(tabId);
+    updateTabs([tabId], true, false);
+    updateTabs(currPlaying, false, false);
+};
 
 var countObjectProperties =  function (obj)
 {
@@ -152,13 +126,59 @@ var findPastTabsToPlay = function (tabId) {
             pastTabId = data.past[pastTabId];
         } else { // If we can't find a tab to go back to
             console.log("couldn't find a way back");
-            if (data.starred && data.tabs[data.starred]) {
-                pastTabId = data.starred;
+            if (data.pinned && data.tabs[data.pinned]) {
+                pastTabId = data.pinned;
             }
             else if (countObjectProperties(data.tabs) == 1) {
                 pastTabId = getSingularProperty(data.tabs);
             }
             else return;
+        }
+    }
+};
+
+var updateTabs = function(tabArr, playing, pauseOthers) {
+    var tabId,desiredState;
+    if (pauseOthers) {
+        for (var j = data.playing.length - 1; j >= 0; j--) {
+            tabId = data.playing[j];
+            desiredState = data.tabs[tabId].state;
+            desiredState.playing = false;
+            chrome.tabs.sendMessage(tabId, {type: "updatePlayer", desiredState: desiredState});
+        }
+    }
+    for (var i = tabArr.length - 1; i >= 0; i--) {
+        tabId = tabArr[i];
+        desiredState = data.tabs[tabId].state;
+        desiredState.playing = playing;
+        chrome.tabs.sendMessage(tabId, {type: "updatePlayer", desiredState: desiredState});
+    }
+};
+
+var restorePrevTabs = function (tabId) {
+    var pastTabIds, nextTabIds = [];
+    if (!_.has(data.past, tabId)) {
+        return -1;
+    }
+    pastTabIds = data.past[tabId];
+    //WHILE tabs does not contain anything in pastTabIds
+    while (pastTabIds.length > 0) {
+        nextTabIds = [];
+        for (var i = pastTabIds.length - 1; i >= 0; i--) {
+            if (_.has(data.tabs, pastTabIds[i])) {
+                nextTabIds.push(pastTabIds[i]);
+            }
+        }
+        // We didn't find anything to go back to, recurse
+        if (nextTabIds.length === 0) {
+            pastTabIds = [];
+            pastTabIds.push(_.each(pastTabIds, function (e, i) {
+                return data.past(e);
+            }));
+            continue;
+        } else {
+            updateTabs(nextTabIds, true, false);
+            break;
         }
     }
 };
@@ -169,7 +189,7 @@ var findPastTabsToPlay = function (tabId) {
 
 
 var init = function () {
-    data = {tabs: {}, playing: [], past: {}, starred: undefined};
+    data = {tabs: {}, playing: [], past: {}, pinned: undefined};
     
     chrome.tabs.onRemoved.addListener(onTabClosed);
 };

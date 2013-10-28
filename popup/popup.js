@@ -15,19 +15,19 @@ var newData;
 var draw = function () {
   var play_list = $("#play_list").empty();
   var pause_list = $("#pause_list").empty();
-  var player, icon, title, playing, state_button, volume_button, muted, star;
+  var player, icon, title, playing, state_button, volume_button, muted, pin;
 
   if (data) {
     for (var i in data.tabs) {
-      console.log(i, data.starred, (i == data.starred ? "visible" : "hidden"), (i === data.starred ? "visible" : "hidden"));
+      console.log(i, data.pinned, (i == data.pinned ? "visible" : "hidden"), (i === data.pinned ? "visible" : "hidden"));
       muted = data.tabs[i].state.muted;
       icon = "<img class='icon' src='" + (data.tabs[i].tab.favIconUrl ? data.tabs[i].tab.favIconUrl : "../images/PA.png") + "'>";
-      star = "<img class='star' src='../images/star_icon.png' style='visibility:" + (i == data.starred ? "visible" : "hidden") + ";'>";
+      pin = "<img class='pin' src='../images/pin_icon.png' style='visibility:" + (i == data.pinned ? "visible" : "hidden") + ";'>";
       playing = data.tabs[i].state.playing;
       title = "<p class='title'>" + (data.tabs[i].state.title ? data.tabs[i].state.title : data.tabs[i].tab.title) + "</p>";
       state_button = "<img class='state_button' src=" + (playing ? "'../images/pause_button.png'" : "'../images/play_button.png'") + ">";
       volume_button = "<img class='volume_button' src=" + (muted ?  "'../images/mute_button.png'" : "'../images/volume_button.png'") + ">";
-      player = "<li class='player' data-tab-id=" + i +">" + icon + star + title + state_button + volume_button + "</li>";
+      player = "<li class='player' data-tab-id=" + i +">" + icon + pin + title + state_button + volume_button + "</li>";
 
       if (playing) {
         play_list.append(player);
@@ -54,10 +54,10 @@ var draw = function () {
         var parent = $(this).parent('li');
         var tabId = parent.data("tab-id");
         // var state = data.tabs[tabId].state;
-        if (data.starred === tabId) {
+        if (data.pinned === tabId) {
           tabId = undefined;
         }
-        sendMessageToBackground({type: "popupStar", tabId: tabId});
+        sendMessageToBackground({type: "popuppin", tabId: tabId});
       });
   }
 };
