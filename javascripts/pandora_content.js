@@ -1,27 +1,19 @@
-var player;
-var container;
-var state = -1;
 
+var play, pause, container;
 var DEBUG = true;
 
 var PLAYING = 1;
 var PAUSED = 0;
 
-var injected = false;
-
 var inject = function() {
     injected = true;
     var s = document.createElement('script');
-    s.src = chrome.extension.getURL("youtube/youtube_inject.js");
+    s.src = chrome.extension.getURL("javascripts/pandora_inject.js");
     s.onload = function() {
         this.parentNode.removeChild(this);
     };
     (document.head||document.documentElement).appendChild(s);
 };
-
-//////////////////////////////////////////////
-////////////// Message Passing ///////////////
-//////////////////////////////////////////////
 
 var receiveMessageFromPage = function (name, handler) {
     container.addEventListener(name, function(event){
@@ -48,9 +40,40 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
 });
 
-//////////////////////////////////////////////
-////////////// Event Handlers ////////////////
-//////////////////////////////////////////////
+var injected = false;
+// on load
+var readyStateCheckInterval = setInterval(function() {
+  if (document.readyState === "complete") {
+    if (!injected) inject();
+    container = document.getElementById("playbackControl");
+
+    receiveMessageFromPage("READY", onLoad);
+    receiveMessageFromPage("STATE_CHANGE", stateChange);
+    receiveMessageFromPage("UPDATE_RESPONSE", updateResponse);
+
+    clearInterval(readyStateCheckInterval);
+  }
+}, 10);
+
+// var getState = function () {
+//     play = document.getElementsByClassName("playButton")[0];
+//     pause = document.getElementsByClassName("pauseButton")[0];
+//     console.log("getState");
+//     if (play.display === "none") {
+//         return PAUSED;
+//     } else {
+//         return PLAYING;
+//     }
+// };
+
+// var toggle = function () {
+//     console.log("toggle, play/pause", play, pause);
+//     if (getState() === PAUSED) {
+//         play.click();
+//     } else {
+//         pause.click();
+//     }
+// };
 
 var stateChange = function (event) {
     console.log("Content got state change to", event.detail.state);
@@ -63,20 +86,8 @@ var updateResponse = function (event) {
 };
 
 var onLoad = function (event) {
-    sendMessageToBackground({type: "register", state: 1},function() {console.log("handler");});
+    console.log("onload");
+    // sendMessageToBackground({type: "register", state: {},function() {
+    //     console.log("handler");});
+
 };
-
-
-// on load
-var readyStateCheckInterval = setInterval(function() {
-  if (document.readyState === "complete") {
-    if (!injected) inject();
-    container = document.getElementById("player-api");
-
-    receiveMessageFromPage("YT_READY", onLoad);
-    receiveMessageFromPage("STATE_CHANGE", stateChange);
-    receiveMessageFromPage("UPDATE_RESPONSE", updateResponse);
-
-    clearInterval(readyStateCheckInterval);
-  }
-}, 10);

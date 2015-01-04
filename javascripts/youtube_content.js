@@ -12,7 +12,7 @@ var injected = false;
 var inject = function() {
     injected = true;
     var s = document.createElement('script');
-    s.src = chrome.extension.getURL("youtube/youtube_inject.js");
+    s.src = chrome.extension.getURL("javascripts/youtube_inject.js");
     s.onload = function() {
         this.parentNode.removeChild(this);
     };

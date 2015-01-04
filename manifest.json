@@ -3,7 +3,7 @@
 
   "name": "Sound Flow",
   "description": "Enables seamless audio experiences across tabs",
-  "version": "0.3",
+  "version": "0.4",
 
   "permissions": [
     "tabs", 
@@ -12,25 +12,25 @@
     "storage"
   ],
   "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup/popup.html"
+    "default_icon": "images/icon.png",
+    "default_popup": "views/popup.html"
   },
   "content_scripts": [
     {
       "matches": ["http://www.youtube.com/watch*"],
-      "js": ["youtube/youtube_content.js"],
+      "js": ["javascripts/youtube_content.js"],
       "run_at": "document_idle"
     },
     {
       "matches": ["http://www.pandora.com/*"],
-      "js": ["pandora/pandora_content.js"],
+      "js": ["javascripts/pandora_content.js"],
       "run_at": "document_idle"
     }
   ],
   "background": {
-    // "js": "background.js"
-    "page":"background.html"
+    "js": "javascripts/background.js",
+    "page":"views/background.html"
 
   },
-  "web_accessible_resources": ["pandora/pandora_inject.js", "youtube/youtube_inject.js"]
+  "web_accessible_resources": ["javascripts/pandora_inject.js", "javascripts/youtube_inject.js"]
 }
